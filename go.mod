@@ -1,6 +1,6 @@
 module github.com/s-Amine/token-scan
 
-go 1.22.0
+go 1.23
 
 require github.com/GoPlusSecurity/goplus-sdk-go v1.2.2
 
