@@ -97,7 +97,7 @@ func Scan(tokenHash string) (QuickIntelResponse, error) {
 	method := "POST"
 
 	// Prepare the request body
-	request := fmt.Sprintf("{\"chain\":\"eth\",\"tokenAddress\":\"%v\",\"tier\":\"basic\"}", tokenHash)
+	request := fmt.Sprintf("{\"chain\":\"sol\",\"tokenAddress\":\"%v\",\"tier\":\"basic\"}", tokenHash)
 	payload := strings.NewReader(request)
 
 	// Create HTTP client and request
