@@ -63,45 +63,129 @@ func Scan(tokenHash string) *token.TokenInfo {
 	// Unify scan results into one TokenInfo
 	unifiedInfo := token.UnifyTokenInfo(goPlusTokenInfo, honeypotTokenInfo, quickIntelTokenInfo)
 
-	// Additional analyses
-	if funcs, err := sourcecheck.Scan(tokenHash); err == nil {
-		unifiedInfo.HasSensitiveFunctions = funcs
+	// Additional analyses run concurrently
+	type holdersRes struct {
+		pct float64
+		top map[string]float64
+	}
+	type liquidityRes struct {
+		locked bool
+		unlock int64
+	}
+	type honeypotRes struct {
+		isH   bool
+		errSt string
+	}
+	type microtxRes struct {
+		count int
+		bot   bool
+	}
+	type cloneRes struct {
+		isClone bool
+		orig    string
+	}
+	type socialRes struct {
+		proof bool
+		by    string
 	}
 
-	if pct, top, err := holders.Scan(tokenHash); err == nil {
-		unifiedInfo.TopHolderPercent = pct
-		unifiedInfo.TopHolders = top
-	}
+	holdersChan := make(chan holdersRes)
+	sourceCheckChan := make(chan []string)
+	washTradeChan := make(chan float64)
+	liquidityChan := make(chan liquidityRes)
+	honeypotChan := make(chan honeypotRes)
+	microtxChan := make(chan microtxRes)
+	cloneChan := make(chan cloneRes)
+	socialChan := make(chan socialRes)
 
-	if score, err := washtrade.Scan(tokenHash); err == nil {
-		unifiedInfo.WashTradeScore = score
-	}
-
-	if locked, unlock, err := liquidity.Scan(tokenHash); err == nil {
-		unifiedInfo.LiquidityLocked = locked
-		unifiedInfo.LiquidityUnlockTime = unlock
-	}
-
-	if isH, errStr := honeypot.Scan(tokenHash); errStr != "" || isH {
-		unifiedInfo.IsHoneypot = isH
-		unifiedInfo.HoneypotError = errStr
-	}
-
-	if count, bot := microtx.Scan(tokenHash); bot {
-		unifiedInfo.MicroTxCount = count
-		unifiedInfo.BotActivity = bot
-	}
-
-	if unifiedInfo.TokenName != "" {
-		if cl, orig := clone.Scan(unifiedInfo.TokenName, unifiedInfo.TokenSymbol, tokenHash); cl {
-			unifiedInfo.IsClone = cl
-			unifiedInfo.OriginalTokenAddress = orig
+	go func() {
+		funcs, err := sourcecheck.Scan(tokenHash)
+		if err == nil {
+			sourceCheckChan <- funcs
+		} else {
+			sourceCheckChan <- nil
 		}
-	}
+	}()
 
-	if proof, by := social.Scan(tokenHash); proof {
-		unifiedInfo.SocialProof = proof
-		unifiedInfo.AnnouncedBy = by
+	go func() {
+		pct, top, err := holders.Scan(tokenHash)
+		if err == nil {
+			holdersChan <- holdersRes{pct: pct, top: top}
+		} else {
+			holdersChan <- holdersRes{}
+		}
+	}()
+
+	go func() {
+		s, _ := washtrade.Scan(tokenHash)
+		washTradeChan <- s
+	}()
+
+	go func() {
+		locked, unlock, _ := liquidity.Scan(tokenHash)
+		liquidityChan <- liquidityRes{locked: locked, unlock: unlock}
+	}()
+
+	go func() {
+		isH, errStr := honeypot.Scan(tokenHash)
+		honeypotChan <- honeypotRes{isH: isH, errSt: errStr}
+	}()
+
+	go func() {
+		count, bot := microtx.Scan(tokenHash)
+		microtxChan <- microtxRes{count: count, bot: bot}
+	}()
+
+	go func() {
+		if unifiedInfo.TokenName != "" {
+			cl, orig := clone.Scan(unifiedInfo.TokenName, unifiedInfo.TokenSymbol, tokenHash)
+			cloneChan <- cloneRes{isClone: cl, orig: orig}
+		} else {
+			cloneChan <- cloneRes{}
+		}
+	}()
+
+	go func() {
+		proof, by := social.Scan(tokenHash)
+		socialChan <- socialRes{proof: proof, by: by}
+	}()
+
+	// Receive results
+	for i := 0; i < 8; i++ {
+		select {
+		case funcs := <-sourceCheckChan:
+			if funcs != nil {
+				unifiedInfo.HasSensitiveFunctions = funcs
+			}
+		case h := <-holdersChan:
+			if h.top != nil {
+				unifiedInfo.TopHolderPercent = h.pct
+				unifiedInfo.TopHolders = h.top
+			}
+		case s := <-washTradeChan:
+			unifiedInfo.WashTradeScore = s
+		case l := <-liquidityChan:
+			unifiedInfo.LiquidityLocked = l.locked
+			unifiedInfo.LiquidityUnlockTime = l.unlock
+		case h := <-honeypotChan:
+			if h.isH || h.errSt != "" {
+				unifiedInfo.IsHoneypot = h.isH
+				unifiedInfo.HoneypotError = h.errSt
+			}
+		case m := <-microtxChan:
+			if m.bot {
+				unifiedInfo.MicroTxCount = m.count
+				unifiedInfo.BotActivity = m.bot
+			}
+		case c := <-cloneChan:
+			if c.isClone {
+				unifiedInfo.IsClone = c.isClone
+				unifiedInfo.OriginalTokenAddress = c.orig
+			}
+		case s := <-socialChan:
+			unifiedInfo.SocialProof = s.proof
+			unifiedInfo.AnnouncedBy = s.by
+		}
 	}
 
 	fingerprint.Scan(tokenHash, unifiedInfo)
