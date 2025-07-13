@@ -39,6 +39,17 @@ type TokenInfo struct {
 	RiskLevel                  string             `json:"risk_level,omitempty"`
 	DetectedPatterns           []string           `json:"detected_patterns,omitempty"`
 	MatchedScamContracts       []string           `json:"matched_scam_contracts,omitempty"`
+	WashTradeScore             float64            `json:"wash_trade_score,omitempty"`
+	LiquidityLocked            bool               `json:"liquidity_locked,omitempty"`
+	LiquidityUnlockTime        int64              `json:"liquidity_unlock_time,omitempty"`
+	HoneypotError              string             `json:"honeypot_error,omitempty"`
+	MicroTxCount               int                `json:"micro_tx_count,omitempty"`
+	BotActivity                bool               `json:"bot_activity,omitempty"`
+	IsClone                    bool               `json:"is_clone,omitempty"`
+	OriginalTokenAddress       string             `json:"original_token_address,omitempty"`
+	SocialProof                bool               `json:"social_proof,omitempty"`
+	AnnouncedBy                string             `json:"announced_by,omitempty"`
+	TrustScore                 int                `json:"trust_score,omitempty"`
 }
 
 // ToJSON converts TokenInfo to JSON string.
