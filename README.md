@@ -16,6 +16,7 @@ Decentralized exchanges (DEXs) have transformed the cryptocurrency landscape, pr
 - **Modular Architecture**: The project is structured with modularity in mind, allowing for easy integration of new scanning methods.
 - **CLI Tool**: Token-Scan prototype offers a basic command-line interface (CLI) for convenient and straightforward usage.
 - **GoLang Package**: Users can integrate Token-Scan prototype as a GoLang package to leverage its basic functionality within their projects.
+- **Advanced Modules**: Additional scanners like source code checks, holder analysis, heuristics and fingerprinting are documented under `docs/`.
 
 ## Installation
 
@@ -38,10 +39,10 @@ cd token-scan
 3. Run the executable:
 
 ```
-./token-scan -mode <mode> -token <token_hash>
+./token-scan -mode <mode> -token <token_hash> [--pretty] [--score-only]
 ```
 
-Replace `<mode>` with the desired scanning mode (`multiscan`, `goplus`, `ishoneypot`, or `quickIntel`) and `<token_hash>` with the hash of the token you wish to scan.
+Replace `<mode>` with one of `multiscan`, `goplus`, `ishoneypot`, `quickIntel`, `sourcecheck`, `holders` or `fingerprint`. The optional flags `--pretty` enables coloured output and `--score-only` prints only the calculated risk score.
 
 
 ### GoLang Package Integration

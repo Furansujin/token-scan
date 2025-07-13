@@ -1,0 +1,10 @@
+{
+  // Weight applied when a contract is both not renounced and not open source
+  "non_renounced_not_open_source": 20,
+  // Extra points added if buy or sell tax exceeds 15%
+  "high_tax": 15,
+  // Presence of a mint function in the contract source
+  "mint_function": 25,
+  // Major holder owning more than 70% of the supply
+  "top_holder_over_70": 30
+}

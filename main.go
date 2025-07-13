@@ -1,21 +1,28 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
 
+	"github.com/s-Amine/token-scan/cli"
+	"github.com/s-Amine/token-scan/scanners/customrules/fingerprint"
+	"github.com/s-Amine/token-scan/scanners/customrules/holders"
+	"github.com/s-Amine/token-scan/scanners/customrules/sourcecheck"
 	"github.com/s-Amine/token-scan/scanners/goplus"
 	"github.com/s-Amine/token-scan/scanners/ishoneypot"
 	"github.com/s-Amine/token-scan/scanners/multiscan"
 	"github.com/s-Amine/token-scan/scanners/quickintel"
+	"github.com/s-Amine/token-scan/token"
 )
 
 func main() {
 	// Define command-line flags
-	mode := flag.String("mode", "", "Mode of operation: multiscan, goplus, ishoneypot, or quickIntel")
+	mode := flag.String("mode", "", "Mode of operation: multiscan, goplus, ishoneypot, quickIntel, sourcecheck, holders or fingerprint")
 	tokenHash := flag.String("token", "", "Token hash to scan")
+	pretty := flag.Bool("pretty", false, "Pretty colored output")
+	scoreOnly := flag.Bool("score-only", false, "Output only the risk score")
+	etherscanKey := flag.String("etherscan-key", "", "Etherscan API key")
 	flag.Parse()
 
 	if *mode == "" {
@@ -41,6 +48,14 @@ func main() {
 		result, err = ishoneypot.Scan(*tokenHash)
 	case "quickIntel":
 		result, err = quickintel.Scan(*tokenHash)
+	case "sourcecheck":
+		funcs, err2 := sourcecheck.Scan(*tokenHash, *etherscanKey)
+		err = err2
+		result = funcs
+	case "holders":
+		result, err = holders.Scan(*tokenHash, *etherscanKey)
+	case "fingerprint":
+		result, err = fingerprint.Scan(*tokenHash)
 	default:
 		fmt.Println("Error: Invalid mode specified")
 		flag.PrintDefaults()
@@ -52,15 +67,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	printJSON(result)
-}
-
-// printJSON prints the provided data structure as JSON to stdout
-func printJSON(data interface{}) {
-	jsonData, err := json.MarshalIndent(data, "", "  ")
-	if err != nil {
-		fmt.Printf("Error marshalling JSON: %v\n", err)
-		os.Exit(1)
+	if *scoreOnly {
+		if info, ok := result.(*token.TokenInfo); ok {
+			fmt.Println(info.RiskScore)
+		} else {
+			cli.PrintJSON(result)
+		}
+		return
 	}
-	fmt.Println(string(jsonData))
+
+	if *pretty {
+		if info, ok := result.(*token.TokenInfo); ok {
+			cli.PrintPretty(info)
+			return
+		}
+	}
+
+	cli.PrintJSON(result)
 }
