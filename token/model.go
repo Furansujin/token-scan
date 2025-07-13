@@ -12,26 +12,34 @@ import (
 
 // TokenInfo represents information about a token.
 type TokenInfo struct {
-	TokenName                  string `json:"token_name,omitempty"`
-	TokenSymbol                string `json:"token_symbol,omitempty"`
-	Decimals                   int    `json:"decimals,omitempty"`
-	UniswapV2Pair              string `json:"uniswapv2_pair,omitempty"`
-	IsHoneypot                 bool   `json:"is_honeypot,omitempty"`
-	IsOpenSource               bool   `json:"is_open_source,omitempty"`
-	IsWhitelisted              bool   `json:"is_whitelisted,omitempty"`
-	CanTakeBackOwnership       bool   `json:"can_take_back_ownership,omitempty"`
-	OwnerChangeBalance         bool   `json:"owner_change_balance,omitempty"`
-	CannotBuy                  bool   `json:"cannot_buy,omitempty"`
-	CannotSellAll              bool   `json:"cannot_sell_all,omitempty"`
-	IsMintable                 bool   `json:"is_mintable,omitempty"`
-	HiddenOwner                bool   `json:"hidden_owner,omitempty"`
-	TransferPausable           bool   `json:"transfer_pausable,omitempty"`
-	IsBlacklisted              bool   `json:"is_blacklisted,omitempty"`
-	BuyTax                     string `json:"buy_tax,omitempty"`
-	SellTax                    string `json:"sell_tax,omitempty"`
-	ExternalCall               bool   `json:"external_call,omitempty"`
-	TradingCooldown            bool   `json:"trading_cooldown,omitempty"`
-	PersonalSlippageModifiable bool   `json:"personal_slippage_modifiable,omitempty"`
+	TokenName                  string             `json:"token_name,omitempty"`
+	TokenSymbol                string             `json:"token_symbol,omitempty"`
+	Decimals                   int                `json:"decimals,omitempty"`
+	UniswapV2Pair              string             `json:"uniswapv2_pair,omitempty"`
+	IsHoneypot                 bool               `json:"is_honeypot,omitempty"`
+	IsOpenSource               bool               `json:"is_open_source,omitempty"`
+	IsWhitelisted              bool               `json:"is_whitelisted,omitempty"`
+	CanTakeBackOwnership       bool               `json:"can_take_back_ownership,omitempty"`
+	OwnerChangeBalance         bool               `json:"owner_change_balance,omitempty"`
+	CannotBuy                  bool               `json:"cannot_buy,omitempty"`
+	CannotSellAll              bool               `json:"cannot_sell_all,omitempty"`
+	IsMintable                 bool               `json:"is_mintable,omitempty"`
+	HiddenOwner                bool               `json:"hidden_owner,omitempty"`
+	TransferPausable           bool               `json:"transfer_pausable,omitempty"`
+	IsBlacklisted              bool               `json:"is_blacklisted,omitempty"`
+	BuyTax                     string             `json:"buy_tax,omitempty"`
+	SellTax                    string             `json:"sell_tax,omitempty"`
+	ExternalCall               bool               `json:"external_call,omitempty"`
+	TradingCooldown            bool               `json:"trading_cooldown,omitempty"`
+	PersonalSlippageModifiable bool               `json:"personal_slippage_modifiable,omitempty"`
+	ContractRenounced          bool               `json:"contract_renounced,omitempty"`
+	TopHolderPercent           float64            `json:"top_holder_percent,omitempty"`
+	TopHolders                 map[string]float64 `json:"top_holders,omitempty"`
+	HasSensitiveFunctions      []string           `json:"has_sensitive_functions,omitempty"`
+	DetectedPatterns           []string           `json:"detected_patterns,omitempty"`
+	MatchedScamContracts       []string           `json:"matched_scam_contracts,omitempty"`
+	RiskScore                  int                `json:"risk_score,omitempty"`
+	RiskLevel                  string             `json:"risk_level,omitempty"`
 }
 
 // ToJSON converts TokenInfo to JSON string.
@@ -71,6 +79,7 @@ func InitTokenInfoFromQuickIntelResponse(response quickintel.QuickIntelResponse)
 		IsBlacklisted:              response.QuickiAudit.CanBlacklist,
 		ExternalCall:               response.QuickiAudit.HasExternalContractRisk,
 		TradingCooldown:            response.QuickiAudit.HasTradingCooldown,
+		ContractRenounced:          response.QuickiAudit.ContractRenounced,
 		PersonalSlippageModifiable: false,
 	}
 
@@ -171,6 +180,41 @@ func UnifyTokenInfo(info1, info2, info3 *TokenInfo) *TokenInfo {
 	unifiedInfo.ExternalCall = worstBool(info1.ExternalCall, info2.ExternalCall, info3.ExternalCall)
 	unifiedInfo.TradingCooldown = worstBool(info1.TradingCooldown, info2.TradingCooldown, info3.TradingCooldown)
 	unifiedInfo.PersonalSlippageModifiable = false
+	unifiedInfo.ContractRenounced = worstBool(info1.ContractRenounced, info2.ContractRenounced, info3.ContractRenounced)
+	// TopHolderPercent chooses the max value among scans
+	worstFloat := func(a, b, c float64) float64 {
+		max := a
+		if b > max {
+			max = b
+		}
+		if c > max {
+			max = c
+		}
+		return max
+	}
+	unifiedInfo.TopHolderPercent = worstFloat(info1.TopHolderPercent, info2.TopHolderPercent, info3.TopHolderPercent)
+
+	unifiedInfo.TopHolders = map[string]float64{}
+	merge := func(src map[string]float64) {
+		for k, v := range src {
+			if v > unifiedInfo.TopHolders[k] {
+				unifiedInfo.TopHolders[k] = v
+			}
+		}
+	}
+	if info1.TopHolders != nil {
+		merge(info1.TopHolders)
+	}
+	if info2.TopHolders != nil {
+		merge(info2.TopHolders)
+	}
+	if info3.TopHolders != nil {
+		merge(info3.TopHolders)
+	}
+
+	unifiedInfo.HasSensitiveFunctions = append(append(info1.HasSensitiveFunctions, info2.HasSensitiveFunctions...), info3.HasSensitiveFunctions...)
+	unifiedInfo.DetectedPatterns = append(append(info1.DetectedPatterns, info2.DetectedPatterns...), info3.DetectedPatterns...)
+	unifiedInfo.MatchedScamContracts = append(append(info1.MatchedScamContracts, info2.MatchedScamContracts...), info3.MatchedScamContracts...)
 
 	return unifiedInfo
 }
