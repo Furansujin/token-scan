@@ -16,6 +16,7 @@ Decentralized exchanges (DEXs) have transformed the cryptocurrency landscape, pr
 - **Modular Architecture**: The project is structured with modularity in mind, allowing for easy integration of new scanning methods.
 - **CLI Tool**: Token-Scan prototype offers a basic command-line interface (CLI) for convenient and straightforward usage.
 - **GoLang Package**: Users can integrate Token-Scan prototype as a GoLang package to leverage its basic functionality within their projects.
+- **Advanced Modules**: Source code analysis, holders distribution, heuristic patterns, fingerprinting and risk scoring. See docs for details.
 
 ## Installation
 
@@ -170,3 +171,5 @@ Token-Scan's functionality is indebted to various open-source libraries and data
 
 ---
 **Disclaimer**: This project is provided as-is with no warranties or guarantees. Use at your own discretion.
+
+Additional documentation for each module is available in the docs/ directory.

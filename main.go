@@ -1,11 +1,10 @@
 package main
 
 import (
-	"encoding/json"
-	"flag"
 	"fmt"
-	"os"
 
+	"github.com/s-Amine/token-scan/cli"
+	"github.com/s-Amine/token-scan/scanners/customrules/sourcecheck"
 	"github.com/s-Amine/token-scan/scanners/goplus"
 	"github.com/s-Amine/token-scan/scanners/ishoneypot"
 	"github.com/s-Amine/token-scan/scanners/multiscan"
@@ -13,54 +12,35 @@ import (
 )
 
 func main() {
-	// Define command-line flags
-	mode := flag.String("mode", "", "Mode of operation: multiscan, goplus, ishoneypot, or quickIntel")
-	tokenHash := flag.String("token", "", "Token hash to scan")
-	flag.Parse()
-
-	if *mode == "" {
-		flag.PrintDefaults()
-		os.Exit(1)
-	}
-
-	if *tokenHash == "" {
-		fmt.Println("Error: Token hash is required")
-		flag.PrintDefaults()
-		os.Exit(1)
+	opts := cli.Parse()
+	if opts.Token == "" {
+		fmt.Println("token address required")
+		return
 	}
 
 	var result interface{}
 	var err error
 
-	switch *mode {
+	switch opts.Mode {
 	case "multiscan":
-		result = multiscan.Scan(*tokenHash)
+		result = multiscan.Scan(opts.Token)
 	case "goplus":
-		result, err = goplus.Scan(*tokenHash)
+		result, err = goplus.Scan(opts.Token)
 	case "ishoneypot":
-		result, err = ishoneypot.Scan(*tokenHash)
+		result, err = ishoneypot.Scan(opts.Token)
 	case "quickIntel":
-		result, err = quickintel.Scan(*tokenHash)
+		result, err = quickintel.Scan(opts.Token)
+	case "sourcecheck":
+		result, err = sourcecheck.Scan(opts.Token)
 	default:
-		fmt.Println("Error: Invalid mode specified")
-		flag.PrintDefaults()
-		os.Exit(1)
+		fmt.Println("invalid mode")
+		return
 	}
 
 	if err != nil {
-		fmt.Printf("Error occurred during %s scan: %v\n", *mode, err)
-		os.Exit(1)
+		fmt.Printf("scan error: %v\n", err)
+		return
 	}
 
-	printJSON(result)
-}
-
-// printJSON prints the provided data structure as JSON to stdout
-func printJSON(data interface{}) {
-	jsonData, err := json.MarshalIndent(data, "", "  ")
-	if err != nil {
-		fmt.Printf("Error marshalling JSON: %v\n", err)
-		os.Exit(1)
-	}
-	fmt.Println(string(jsonData))
+	cli.Print(result, opts)
 }
