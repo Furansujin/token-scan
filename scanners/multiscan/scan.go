@@ -158,30 +158,22 @@ func Scan(tokenHash string) *token.TokenInfo {
 				unifiedInfo.HasSensitiveFunctions = funcs
 			}
 		case h := <-holdersChan:
-			if h.top != nil {
-				unifiedInfo.TopHolderPercent = h.pct
-				unifiedInfo.TopHolders = h.top
-			}
+			unifiedInfo.TopHolderPercent = h.pct
+			unifiedInfo.TopHolders = h.top
 		case s := <-washTradeChan:
 			unifiedInfo.WashTradeScore = s
 		case l := <-liquidityChan:
 			unifiedInfo.LiquidityLocked = l.locked
 			unifiedInfo.LiquidityUnlockTime = l.unlock
 		case h := <-honeypotChan:
-			if h.isH || h.errSt != "" {
-				unifiedInfo.IsHoneypot = h.isH
-				unifiedInfo.HoneypotError = h.errSt
-			}
+			unifiedInfo.IsHoneypot = h.isH
+			unifiedInfo.HoneypotError = h.errSt
 		case m := <-microtxChan:
-			if m.bot {
-				unifiedInfo.MicroTxCount = m.count
-				unifiedInfo.BotActivity = m.bot
-			}
+			unifiedInfo.MicroTxCount = m.count
+			unifiedInfo.BotActivity = m.bot
 		case c := <-cloneChan:
-			if c.isClone {
-				unifiedInfo.IsClone = c.isClone
-				unifiedInfo.OriginalTokenAddress = c.orig
-			}
+			unifiedInfo.IsClone = c.isClone
+			unifiedInfo.OriginalTokenAddress = c.orig
 		case s := <-socialChan:
 			unifiedInfo.SocialProof = s.proof
 			unifiedInfo.AnnouncedBy = s.by
