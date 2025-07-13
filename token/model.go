@@ -12,26 +12,33 @@ import (
 
 // TokenInfo represents information about a token.
 type TokenInfo struct {
-	TokenName                  string `json:"token_name,omitempty"`
-	TokenSymbol                string `json:"token_symbol,omitempty"`
-	Decimals                   int    `json:"decimals,omitempty"`
-	UniswapV2Pair              string `json:"uniswapv2_pair,omitempty"`
-	IsHoneypot                 bool   `json:"is_honeypot,omitempty"`
-	IsOpenSource               bool   `json:"is_open_source,omitempty"`
-	IsWhitelisted              bool   `json:"is_whitelisted,omitempty"`
-	CanTakeBackOwnership       bool   `json:"can_take_back_ownership,omitempty"`
-	OwnerChangeBalance         bool   `json:"owner_change_balance,omitempty"`
-	CannotBuy                  bool   `json:"cannot_buy,omitempty"`
-	CannotSellAll              bool   `json:"cannot_sell_all,omitempty"`
-	IsMintable                 bool   `json:"is_mintable,omitempty"`
-	HiddenOwner                bool   `json:"hidden_owner,omitempty"`
-	TransferPausable           bool   `json:"transfer_pausable,omitempty"`
-	IsBlacklisted              bool   `json:"is_blacklisted,omitempty"`
-	BuyTax                     string `json:"buy_tax,omitempty"`
-	SellTax                    string `json:"sell_tax,omitempty"`
-	ExternalCall               bool   `json:"external_call,omitempty"`
-	TradingCooldown            bool   `json:"trading_cooldown,omitempty"`
-	PersonalSlippageModifiable bool   `json:"personal_slippage_modifiable,omitempty"`
+	TokenName                  string             `json:"token_name,omitempty"`
+	TokenSymbol                string             `json:"token_symbol,omitempty"`
+	Decimals                   int                `json:"decimals,omitempty"`
+	UniswapV2Pair              string             `json:"uniswapv2_pair,omitempty"`
+	IsHoneypot                 bool               `json:"is_honeypot,omitempty"`
+	IsOpenSource               bool               `json:"is_open_source,omitempty"`
+	IsWhitelisted              bool               `json:"is_whitelisted,omitempty"`
+	CanTakeBackOwnership       bool               `json:"can_take_back_ownership,omitempty"`
+	OwnerChangeBalance         bool               `json:"owner_change_balance,omitempty"`
+	CannotBuy                  bool               `json:"cannot_buy,omitempty"`
+	CannotSellAll              bool               `json:"cannot_sell_all,omitempty"`
+	IsMintable                 bool               `json:"is_mintable,omitempty"`
+	HiddenOwner                bool               `json:"hidden_owner,omitempty"`
+	TransferPausable           bool               `json:"transfer_pausable,omitempty"`
+	IsBlacklisted              bool               `json:"is_blacklisted,omitempty"`
+	BuyTax                     string             `json:"buy_tax,omitempty"`
+	SellTax                    string             `json:"sell_tax,omitempty"`
+	ExternalCall               bool               `json:"external_call,omitempty"`
+	TradingCooldown            bool               `json:"trading_cooldown,omitempty"`
+	PersonalSlippageModifiable bool               `json:"personal_slippage_modifiable,omitempty"`
+	HasSensitiveFunctions      []string           `json:"has_sensitive_functions,omitempty"`
+	TopHolderPercent           float64            `json:"top_holder_percent,omitempty"`
+	TopHolders                 map[string]float64 `json:"top_holders,omitempty"`
+	RiskScore                  int                `json:"risk_score,omitempty"`
+	RiskLevel                  string             `json:"risk_level,omitempty"`
+	DetectedPatterns           []string           `json:"detected_patterns,omitempty"`
+	MatchedScamContracts       []string           `json:"matched_scam_contracts,omitempty"`
 }
 
 // ToJSON converts TokenInfo to JSON string.

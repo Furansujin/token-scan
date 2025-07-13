@@ -1,6 +1,11 @@
 package multiscan
 
 import (
+	"github.com/s-Amine/token-scan/scanners/customrules/fingerprint"
+	"github.com/s-Amine/token-scan/scanners/customrules/heuristics"
+	"github.com/s-Amine/token-scan/scanners/customrules/holders"
+	"github.com/s-Amine/token-scan/scanners/customrules/scoring"
+	"github.com/s-Amine/token-scan/scanners/customrules/sourcecheck"
 	"github.com/s-Amine/token-scan/scanners/goplus"
 	"github.com/s-Amine/token-scan/scanners/ishoneypot"
 	"github.com/s-Amine/token-scan/scanners/quickintel"
@@ -51,6 +56,23 @@ func Scan(tokenHash string) *token.TokenInfo {
 
 	// Unify scan results into one TokenInfo
 	unifiedInfo := token.UnifyTokenInfo(goPlusTokenInfo, honeypotTokenInfo, quickIntelTokenInfo)
+
+	// Additional analyses
+	if funcs, err := sourcecheck.Scan(tokenHash); err == nil {
+		unifiedInfo.HasSensitiveFunctions = funcs
+	}
+
+	if pct, top, err := holders.Scan(tokenHash); err == nil {
+		unifiedInfo.TopHolderPercent = pct
+		unifiedInfo.TopHolders = top
+	}
+
+	fingerprint.Scan(tokenHash, unifiedInfo)
+
+	heuristics.Analyze(unifiedInfo)
+
+	// Compute risk score
+	scoring.Calculate(unifiedInfo)
 
 	return unifiedInfo
 }
