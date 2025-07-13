@@ -9,6 +9,7 @@ import (
 	"github.com/s-Amine/token-scan/scanners/ishoneypot"
 	"github.com/s-Amine/token-scan/scanners/multiscan"
 	"github.com/s-Amine/token-scan/scanners/quickintel"
+	"github.com/s-Amine/token-scan/token"
 )
 
 func main() {
@@ -40,6 +41,12 @@ func main() {
 	if err != nil {
 		fmt.Printf("scan error: %v\n", err)
 		return
+	}
+	if opts.ScoreOnly {
+		if info, ok := result.(*token.TokenInfo); ok {
+			fmt.Println(info.TrustScore)
+			return
+		}
 	}
 
 	cli.Print(result, opts)
